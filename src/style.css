@@ -516,6 +516,62 @@ body {
   transform: translateY(0);
 }
 
+.modal-overlay.open .modal.open {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ===========================
+   Completion Modal
+   =========================== */
+.completion-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.completion-modal.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.completion-content {
+  background: var(--current-bg);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  width: 90%;
+  max-width: 320px;
+  box-shadow: var(--shadow-xl);
+  color: var(--current-text);
+  transform: scale(0.9);
+  transition: transform var(--spring);
+}
+
+.completion-modal.open .completion-content {
+  transform: scale(1);
+}
+
+.completion-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.completion-message {
+  opacity: 0.8;
+  margin-bottom: var(--space-lg);
+}
+
 .modal h2 {
   font-family: var(--font-display);
   font-size: 1.25rem;
