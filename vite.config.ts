@@ -7,8 +7,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'sounds/*.mp3'],
       manifest: {
-        name: 'egg + tomato',
-        short_name: 'egg + tomato',
+        name: 'egg and tomato',
+        short_name: 'egg and tomato',
         description: 'A playful Pomodoro timer with Egg (countdown) and Tomato (pomodoro) modes',
         theme_color: '#e85d4c',
         background_color: '#fef5f4',
