@@ -289,7 +289,7 @@ body {
     box-shadow var(--transition-fast);
   box-shadow: var(--shadow-md);
   min-width: 120px;
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
 }
