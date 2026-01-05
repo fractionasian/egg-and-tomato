@@ -74,35 +74,32 @@ function render(): void {
       <div class="timer-display">${formatTime(state.remainingMs)}</div>
     </div>
 
-    ${
-      state.mode === 'tomato'
-        ? `
+    ${state.mode === 'tomato'
+      ? `
       <div class="session-label">${getSessionLabel(state.tomatoSession)}</div>
       <div class="pomo-dots">
         ${Array.from(
-          { length: settings.sessionsBeforeLongBreak },
-          (_, i) => `<div class="pomo-dot ${i < state.cyclePosition ? 'filled' : ''}"></div>`,
-        ).join('')}
+        { length: settings.sessionsBeforeLongBreak },
+        (_, i) => `<div class="pomo-dot ${i < state.cyclePosition ? 'filled' : ''}"></div>`,
+      ).join('')}
       </div>
     `
-        : ''
+      : ''
     }
     
     ${state.mode === 'egg' ? renderEggDurationPicker() : ''}
     
     <div class="controls">
-      ${
-        state.status === 'running'
-          ? `<button class="btn btn-primary" id="btn-pause">Pause</button>`
-          : `<button class="btn btn-primary" id="btn-start">${state.status === 'paused' ? 'Resume' : 'Start'}</button>`
-      }
+      ${state.status === 'running'
+      ? `<button class="btn btn-primary" id="btn-pause">Pause</button>`
+      : `<button class="btn btn-primary" id="btn-start">${state.status === 'paused' ? 'Resume' : 'Start'}</button>`
+    }
       <button class="btn btn-secondary btn-icon" id="btn-reset" title="Reset">↺</button>
       ${state.mode === 'tomato' ? `<button class="btn btn-secondary btn-icon" id="btn-skip" title="Skip">⏭</button>` : ''}
     </div>
     
-    ${
-      state.mode === 'tomato'
-        ? `
+    ${state.mode === 'tomato'
+      ? `
       <div class="stats">
         <div class="stat">
           <div class="stat-value">${stats.todayCount}</div>
@@ -118,7 +115,7 @@ function render(): void {
         </div>
       </div>
     `
-        : ''
+      : ''
     }
     
     <button class="settings-trigger" id="settings-btn" title="Settings">⚙️</button>
@@ -147,34 +144,37 @@ function renderEggDurationPicker(): string {
   const isCustom = !presets.includes(currentMinutes);
 
   // Format current time for the input
-  // Format for type="time" (HH:MM)
-  const totalMins = Math.floor(state.totalMs / 60000);
-  const hours = Math.floor(totalMins / 60);
-  const mins = totalMins % 60;
-  const timeValue = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  // Format for type="time" (HH:MM) - UNUSED since reverted to number
+  // const totalMins = Math.floor(state.totalMs / 60000);
+  // const hours = Math.floor(totalMins / 60);
+  // const mins = totalMins % 60;
+  // const timeValue = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 
   return `
     <div class="duration-picker">
       ${presets
-        .map(
-          (min) => `
+      .map(
+        (min) => `
         <button 
           class="duration-btn" 
           data-minutes="${min}"
           aria-pressed="${currentMinutes === min && !isCustom}"
         >${min} min</button>
       `,
-        )
-        .join('')}
+      )
+      .join('')}
     </div>
     <div class="custom-duration">
       <label for="custom-time">Custom:</label>
       <input 
-        type="time" 
+        type="number" 
+        inputmode="numeric"
         id="custom-time" 
         class="custom-time-input" 
-        value="${timeValue}"
-        step="60"
+        value="${isCustom ? Math.round(state.totalMs / 60000) : ''}"
+        placeholder="min"
+        min="1"
+        max="180"
       />
       <button class="btn btn-secondary btn-sm" id="set-custom" aria-pressed="${isCustom}">Set</button>
     </div>
@@ -190,9 +190,8 @@ function renderSettingsModal(): string {
       <div class="modal">
         <h2>⚙️ Settings</h2>
         
-        ${
-          state.mode === 'tomato'
-            ? `
+        ${state.mode === 'tomato'
+      ? `
           <div class="setting-row">
             <span class="setting-label">Work Duration</span>
             <input type="number" class="setting-input" id="setting-work" value="${settings.workMinutes}" min="1" max="90" /> min
@@ -206,8 +205,8 @@ function renderSettingsModal(): string {
             <input type="number" class="setting-input" id="setting-long" value="${settings.longBreakMinutes}" min="1" max="60" /> min
           </div>
         `
-            : ''
-        }
+      : ''
+    }
         
         <div class="setting-row">
           <span class="setting-label">Dark Mode</span>
@@ -314,21 +313,10 @@ function setCustomDuration(): void {
 
   const value = input.value.trim();
 
-  // Parse HH:MM from type="time"
-  let totalMs = 0;
-
-  if (value.includes(':')) {
-    const [hours, mins] = value.split(':').map((v) => parseInt(v) || 0);
-    totalMs = (hours * 60 + mins) * 60 * 1000;
-  } else {
-    // Treat as minutes
-    const mins = parseInt(value) || 0;
-    totalMs = mins * 60 * 1000;
-  }
-
-  if (totalMs > 0 && totalMs <= 180 * 60 * 1000) {
-    // Max 3 hours
-    setDuration(totalMs);
+  // Parse Minutes
+  const mins = parseInt(value, 10);
+  if (!isNaN(mins) && mins > 0) {
+    setDuration(mins * 60 * 1000);
   }
 }
 
