@@ -7,7 +7,7 @@ import {
   getTomatoSettings, getTomatoStats, incrementTomatoStats,
   getDarkMode
 } from './storage';
-import { playChime, showNotification, requestNotificationPermission } from './audio';
+import { playChime, startAlarm, stopAlarm, showNotification, requestNotificationPermission } from './audio';
 
 // ===========================
 // State
@@ -124,9 +124,11 @@ function renderEggDurationPicker(): string {
   const isCustom = !presets.includes(currentMinutes);
 
   // Format current time for the input
-  const mins = Math.floor(state.totalMs / 60000);
-  const secs = Math.floor((state.totalMs % 60000) / 1000);
-  const timeValue = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  // Format for type="time" (HH:MM)
+  const totalMins = Math.floor(state.totalMs / 60000);
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const timeValue = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 
   return `
     <div class="duration-picker">
@@ -141,12 +143,11 @@ function renderEggDurationPicker(): string {
     <div class="custom-duration">
       <label for="custom-time">Custom:</label>
       <input 
-        type="text" 
+        type="time" 
         id="custom-time" 
         class="custom-time-input" 
         value="${timeValue}"
-        placeholder="MM:SS"
-        pattern="[0-9]{1,2}:[0-9]{2}"
+        step="60"
       />
       <button class="btn btn-secondary btn-sm" id="set-custom" aria-pressed="${isCustom}">Set</button>
     </div>
@@ -282,12 +283,12 @@ function setCustomDuration(): void {
 
   const value = input.value.trim();
 
-  // Parse MM:SS or just M format
+  // Parse HH:MM from type="time"
   let totalMs = 0;
 
   if (value.includes(':')) {
-    const [mins, secs] = value.split(':').map(v => parseInt(v) || 0);
-    totalMs = (mins * 60 + secs) * 1000;
+    const [hours, mins] = value.split(':').map(v => parseInt(v) || 0);
+    totalMs = (hours * 60 + mins) * 60 * 1000;
   } else {
     // Treat as minutes
     const mins = parseInt(value) || 0;
@@ -355,37 +356,69 @@ function skipSession(): void {
   render();
 }
 
+function showCompletion(title: string, message: string, onConfirm: () => void): void {
+  startAlarm();
+
+  // Create modal if not exists
+  let modal = document.getElementById('completion-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'completion-modal';
+    modal.className = 'completion-modal';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div class="completion-content">
+      <div class="completion-title">${title}</div>
+      <div class="completion-message">${message}</div>
+      <button class="btn btn-primary btn-lg" id="completion-confirm">OK</button>
+    </div>
+  `;
+
+  const confirmBtn = document.getElementById('completion-confirm');
+  confirmBtn?.addEventListener('click', () => {
+    stopAlarm();
+    modal?.classList.remove('open');
+    onConfirm();
+    render(); // Re-render to update UI state
+  });
+
+  // Small delay to allow transition
+  requestAnimationFrame(() => modal?.classList.add('open'));
+}
+
 function handleTimerComplete(): void {
-  playChime();
+  showNotification('Timer Complete', 'Your timer has finished!');
 
   if (state.mode === 'egg') {
-    showNotification('Timer Complete!', 'Your egg timer has finished.');
-    state.status = 'idle';
-    render();
+    showCompletion('Time\'s Up!', 'Your egg timer has finished.', () => {
+      state.status = 'idle';
+    });
   } else {
-    // Tomato mode
+    // Tomato logic
     if (state.tomatoSession === 'work') {
       incrementTomatoStats();
       state.cyclePosition++;
 
+      const isLong = state.cyclePosition >= getTomatoSettings().sessionsBeforeLongBreak;
+      const nextSession = isLong ? 'long' : 'short';
+      const msg = isLong ? 'Great work! Time for a long break.' : 'Pomodoro complete! Time for a short break.';
+      const nextTitle = isLong ? 'Long Break' : 'Short Break';
+
+      showCompletion('Focus Complete!', msg, () => {
+        state.tomatoSession = isLong ? 'long' : 'short';
+        state.cyclePosition = isLong ? 0 : state.cyclePosition;
+        initTomatoSession();
+      });
+
       confettiBurst();
-
-      if (state.cyclePosition >= getTomatoSettings().sessionsBeforeLongBreak) {
-        showNotification('Great work! 🎉', 'Time for a long break.');
-        state.tomatoSession = 'long';
-        state.cyclePosition = 0;
-      } else {
-        showNotification('Pomodoro complete!', 'Time for a short break.');
-        state.tomatoSession = 'short';
-      }
     } else {
-      showNotification('Break over!', 'Ready for another focus session?');
-      state.tomatoSession = 'work';
+      showCompletion('Break Over!', 'Ready for another focus session?', () => {
+        state.tomatoSession = 'work';
+        initTomatoSession();
+      });
     }
-
-    initTomatoSession();
-    timerInstance?.reset(state.totalMs);
-    render();
   }
 }
 

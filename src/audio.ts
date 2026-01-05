@@ -65,6 +65,21 @@ export function playChime(): void {
     }
 }
 
+let alarmInterval: number | null = null;
+
+export function startAlarm(): void {
+    if (alarmInterval) return;
+    playChime();
+    alarmInterval = window.setInterval(playChime, 2500); // Loop every 2.5s
+}
+
+export function stopAlarm(): void {
+    if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+    }
+}
+
 // Request notification permission
 export async function requestNotificationPermission(): Promise<boolean> {
     if (!('Notification' in window)) return false;
