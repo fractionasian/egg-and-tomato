@@ -72,7 +72,7 @@
 
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme-mode="light"]) {
+  :root:not([data-theme-mode='light']) {
     --color-egg-bg: hsl(35, 30%, 12%);
     --color-egg-text: hsl(40, 60%, 85%);
 
@@ -92,7 +92,7 @@
   }
 }
 
-[data-theme-mode="dark"] {
+[data-theme-mode='dark'] {
   --color-egg-bg: hsl(35, 30%, 12%);
   --color-egg-text: hsl(40, 60%, 85%);
 
@@ -171,13 +171,13 @@ body {
   color: var(--color-text-muted);
 }
 
-.mode-switch button[aria-pressed="true"] {
+.mode-switch button[aria-pressed='true'] {
   background: var(--current-color);
   color: white;
   box-shadow: var(--shadow-sm);
 }
 
-.mode-switch button:hover:not([aria-pressed="true"]) {
+.mode-switch button:hover:not([aria-pressed='true']) {
   color: var(--color-text);
 }
 
@@ -241,7 +241,6 @@ body {
 }
 
 @keyframes breathe {
-
   0%,
   100% {
     transform: scale(1);
@@ -284,7 +283,8 @@ body {
   border: none;
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: transform var(--spring) var(--transition-fast),
+  transition:
+    transform var(--spring) var(--transition-fast),
     box-shadow var(--transition-fast);
   box-shadow: var(--shadow-md);
   min-width: 120px;
@@ -311,7 +311,7 @@ body {
   color: var(--color-text);
 }
 
-.btn-secondary[aria-pressed="true"] {
+.btn-secondary[aria-pressed='true'] {
   background: var(--current-color);
   color: white;
   box-shadow: var(--shadow-sm);
@@ -362,7 +362,7 @@ body {
   color: var(--current-color);
 }
 
-.duration-picker button[aria-pressed="true"] {
+.duration-picker button[aria-pressed='true'] {
   background: var(--current-color);
   border-color: var(--current-color);
   color: white;
@@ -491,7 +491,9 @@ body {
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+  transition:
+    opacity var(--transition-normal),
+    visibility var(--transition-normal);
   z-index: 100;
 }
 

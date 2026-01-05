@@ -2,12 +2,22 @@ import './style.css';
 import type { TimerStatus, TomatoSession } from './types';
 import { createTimer, formatTime, calculateProgress } from './timer';
 import {
-  getCurrentMode, setCurrentMode,
-  getEggLastDuration, setEggLastDuration,
-  getTomatoSettings, getTomatoStats, incrementTomatoStats,
-  getDarkMode
+  getCurrentMode,
+  setCurrentMode,
+  getEggLastDuration,
+  setEggLastDuration,
+  getTomatoSettings,
+  getTomatoStats,
+  incrementTomatoStats,
+  getDarkMode,
 } from './storage';
-import { playChime, startAlarm, stopAlarm, showNotification, requestNotificationPermission } from './audio';
+import {
+  playChime,
+  startAlarm,
+  stopAlarm,
+  showNotification,
+  requestNotificationPermission,
+} from './audio';
 
 // ===========================
 // State
@@ -23,7 +33,7 @@ interface AppState {
   cyclePosition: number; // 0-3
 }
 
-let state: AppState = {
+const state: AppState = {
   mode: getCurrentMode(),
   remainingMs: 0,
   totalMs: 0,
@@ -64,27 +74,35 @@ function render(): void {
       <div class="timer-display">${formatTime(state.remainingMs)}</div>
     </div>
 
-    ${state.mode === 'tomato' ? `
+    ${
+      state.mode === 'tomato'
+        ? `
       <div class="session-label">${getSessionLabel(state.tomatoSession)}</div>
       <div class="pomo-dots">
-        ${Array.from({ length: settings.sessionsBeforeLongBreak }, (_, i) =>
-    `<div class="pomo-dot ${i < state.cyclePosition ? 'filled' : ''}"></div>`
-  ).join('')}
+        ${Array.from(
+          { length: settings.sessionsBeforeLongBreak },
+          (_, i) => `<div class="pomo-dot ${i < state.cyclePosition ? 'filled' : ''}"></div>`,
+        ).join('')}
       </div>
-    ` : ''}
+    `
+        : ''
+    }
     
     ${state.mode === 'egg' ? renderEggDurationPicker() : ''}
     
     <div class="controls">
-      ${state.status === 'running'
-      ? `<button class="btn btn-primary" id="btn-pause">Pause</button>`
-      : `<button class="btn btn-primary" id="btn-start">${state.status === 'paused' ? 'Resume' : 'Start'}</button>`
-    }
+      ${
+        state.status === 'running'
+          ? `<button class="btn btn-primary" id="btn-pause">Pause</button>`
+          : `<button class="btn btn-primary" id="btn-start">${state.status === 'paused' ? 'Resume' : 'Start'}</button>`
+      }
       <button class="btn btn-secondary btn-icon" id="btn-reset" title="Reset">↺</button>
       ${state.mode === 'tomato' ? `<button class="btn btn-secondary btn-icon" id="btn-skip" title="Skip">⏭</button>` : ''}
     </div>
     
-    ${state.mode === 'tomato' ? `
+    ${
+      state.mode === 'tomato'
+        ? `
       <div class="stats">
         <div class="stat">
           <div class="stat-value">${stats.todayCount}</div>
@@ -99,7 +117,9 @@ function render(): void {
           <div class="stat-label">Streak</div>
         </div>
       </div>
-    ` : ''}
+    `
+        : ''
+    }
     
     <button class="settings-trigger" id="settings-btn" title="Settings">⚙️</button>
     
@@ -112,9 +132,12 @@ function render(): void {
 
 function getSessionLabel(session: TomatoSession): string {
   switch (session) {
-    case 'work': return 'Focus Time';
-    case 'short': return 'Short Break';
-    case 'long': return 'Long Break';
+    case 'work':
+      return 'Focus Time';
+    case 'short':
+      return 'Short Break';
+    case 'long':
+      return 'Long Break';
   }
 }
 
@@ -132,13 +155,17 @@ function renderEggDurationPicker(): string {
 
   return `
     <div class="duration-picker">
-      ${presets.map(min => `
+      ${presets
+        .map(
+          (min) => `
         <button 
           class="duration-btn" 
           data-minutes="${min}"
           aria-pressed="${currentMinutes === min && !isCustom}"
         >${min} min</button>
-      `).join('')}
+      `,
+        )
+        .join('')}
     </div>
     <div class="custom-duration">
       <label for="custom-time">Custom:</label>
@@ -163,7 +190,9 @@ function renderSettingsModal(): string {
       <div class="modal">
         <h2>⚙️ Settings</h2>
         
-        ${state.mode === 'tomato' ? `
+        ${
+          state.mode === 'tomato'
+            ? `
           <div class="setting-row">
             <span class="setting-label">Work Duration</span>
             <input type="number" class="setting-input" id="setting-work" value="${settings.workMinutes}" min="1" max="90" /> min
@@ -176,7 +205,9 @@ function renderSettingsModal(): string {
             <span class="setting-label">Long Break</span>
             <input type="number" class="setting-input" id="setting-long" value="${settings.longBreakMinutes}" min="1" max="60" /> min
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
         <div class="setting-row">
           <span class="setting-label">Dark Mode</span>
@@ -213,7 +244,7 @@ function attachEventListeners(): void {
   document.getElementById('btn-skip')?.addEventListener('click', skipSession);
 
   // Duration picker (Egg mode)
-  document.querySelectorAll('.duration-btn').forEach(btn => {
+  document.querySelectorAll('.duration-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       const minutes = parseInt((e.target as HTMLElement).dataset.minutes || '5');
       setDuration(minutes * 60 * 1000);
@@ -287,7 +318,7 @@ function setCustomDuration(): void {
   let totalMs = 0;
 
   if (value.includes(':')) {
-    const [hours, mins] = value.split(':').map(v => parseInt(v) || 0);
+    const [hours, mins] = value.split(':').map((v) => parseInt(v) || 0);
     totalMs = (hours * 60 + mins) * 60 * 1000;
   } else {
     // Treat as minutes
@@ -295,7 +326,8 @@ function setCustomDuration(): void {
     totalMs = mins * 60 * 1000;
   }
 
-  if (totalMs > 0 && totalMs <= 180 * 60 * 1000) { // Max 3 hours
+  if (totalMs > 0 && totalMs <= 180 * 60 * 1000) {
+    // Max 3 hours
     setDuration(totalMs);
   }
 }
@@ -332,7 +364,7 @@ function startTimer(): void {
         state.status = status;
         updateTimerDisplay();
       },
-      handleTimerComplete
+      handleTimerComplete,
     );
   }
 
@@ -392,7 +424,7 @@ function handleTimerComplete(): void {
   showNotification('Timer Complete', 'Your timer has finished!');
 
   if (state.mode === 'egg') {
-    showCompletion('Time\'s Up!', 'Your egg timer has finished.', () => {
+    showCompletion("Time's Up!", 'Your egg timer has finished.', () => {
       state.status = 'idle';
     });
   } else {
@@ -402,9 +434,9 @@ function handleTimerComplete(): void {
       state.cyclePosition++;
 
       const isLong = state.cyclePosition >= getTomatoSettings().sessionsBeforeLongBreak;
-      const nextSession = isLong ? 'long' : 'short';
-      const msg = isLong ? 'Great work! Time for a long break.' : 'Pomodoro complete! Time for a short break.';
-      const nextTitle = isLong ? 'Long Break' : 'Short Break';
+      const msg = isLong
+        ? 'Great work! Time for a long break.'
+        : 'Pomodoro complete! Time for a short break.';
 
       showCompletion('Focus Complete!', msg, () => {
         state.tomatoSession = isLong ? 'long' : 'short';
@@ -471,11 +503,23 @@ function updateTimerDisplay(): void {
   if (state.status === 'running') {
     startBtn?.replaceWith(createButton('btn-pause', 'Pause', pauseTimer, 'btn btn-primary'));
   } else if (state.status === 'paused' || state.status === 'idle') {
-    pauseBtn?.replaceWith(createButton('btn-start', state.status === 'paused' ? 'Resume' : 'Start', startTimer, 'btn btn-primary'));
+    pauseBtn?.replaceWith(
+      createButton(
+        'btn-start',
+        state.status === 'paused' ? 'Resume' : 'Start',
+        startTimer,
+        'btn btn-primary',
+      ),
+    );
   }
 }
 
-function createButton(id: string, text: string, handler: () => void, className: string): HTMLButtonElement {
+function createButton(
+  id: string,
+  text: string,
+  handler: () => void,
+  className: string,
+): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.id = id;
   btn.className = className;
@@ -528,16 +572,22 @@ function closeSettings(): void {
 }
 
 function saveSettings(): void {
-  const work = parseInt((document.getElementById('setting-work') as HTMLInputElement)?.value || '25');
-  const short = parseInt((document.getElementById('setting-short') as HTMLInputElement)?.value || '5');
-  const long = parseInt((document.getElementById('setting-long') as HTMLInputElement)?.value || '15');
+  const work = parseInt(
+    (document.getElementById('setting-work') as HTMLInputElement)?.value || '25',
+  );
+  const short = parseInt(
+    (document.getElementById('setting-short') as HTMLInputElement)?.value || '5',
+  );
+  const long = parseInt(
+    (document.getElementById('setting-long') as HTMLInputElement)?.value || '15',
+  );
 
   const settings = getTomatoSettings();
   settings.workMinutes = work;
   settings.shortBreakMinutes = short;
   settings.longBreakMinutes = long;
 
-  import('./storage').then(m => m.setTomatoSettings(settings));
+  import('./storage').then((m) => m.setTomatoSettings(settings));
 
   // If idle, update current duration
   if (state.status === 'idle' && state.mode === 'tomato') {
@@ -547,8 +597,11 @@ function saveSettings(): void {
 }
 
 function saveDarkMode(): void {
-  const mode = (document.getElementById('setting-dark') as HTMLSelectElement)?.value as 'auto' | 'light' | 'dark';
-  import('./storage').then(m => m.setDarkMode(mode));
+  const mode = (document.getElementById('setting-dark') as HTMLSelectElement)?.value as
+    | 'auto'
+    | 'light'
+    | 'dark';
+  import('./storage').then((m) => m.setDarkMode(mode));
 
   document.documentElement.removeAttribute('data-theme-mode');
   if (mode !== 'auto') {
@@ -568,7 +621,7 @@ function confettiBurst(): void {
     confetti.className = 'confetti';
     confetti.style.left = Math.random() * 100 + 'vw';
     confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-    confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+    confetti.style.animationDuration = 2 + Math.random() * 2 + 's';
     confetti.style.animationDelay = Math.random() * 0.5 + 's';
     container.appendChild(confetti);
 
