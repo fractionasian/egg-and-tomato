@@ -88,5 +88,5 @@ export function showNotification(title: string, body: string): void {
         badge: '/icons/icon-192.png',
         tag: 'timer-complete',
         renotify: true,
-    });
+    } as any);
 }
