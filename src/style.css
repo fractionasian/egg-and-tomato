@@ -142,8 +142,8 @@ body {
   flex-direction: column;
   align-items: center;
   padding: var(--space-lg);
-  padding-top: env(safe-area-inset-top, var(--space-lg));
-  padding-bottom: env(safe-area-inset-bottom, var(--space-lg));
+  padding-top: calc(var(--space-lg) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom));
 }
 
 /* ===========================
@@ -241,6 +241,7 @@ body {
 }
 
 @keyframes breathe {
+
   0%,
   100% {
     transform: scale(1);
