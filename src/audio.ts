@@ -15,6 +15,7 @@ function getAudioContext(): AudioContext {
 const AMBIENT_URLS: Record<string, string> = {
   rain: 'https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/rain.mp3',
   forest: 'https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/birds.mp3',
+  ticking: 'https://cdn.pixabay.com/audio/2025/09/28/audio_ae4b62f063.mp3',
 };
 
 class AmbientPlayer {
@@ -95,6 +96,45 @@ class AmbientPlayer {
 }
 
 export const ambientPlayer = new AmbientPlayer();
+
+class TickPlayer {
+  private buffer: AudioBuffer | null = null;
+  private isLoading = false;
+
+  async load() {
+    if (this.buffer || this.isLoading) return;
+    this.isLoading = true;
+    try {
+      const ctx = getAudioContext();
+      const response = await fetch(AMBIENT_URLS.ticking);
+      const arrayBuffer = await response.arrayBuffer();
+      this.buffer = await ctx.decodeAudioData(arrayBuffer);
+    } catch (e) {
+      console.error('Failed to load tick sound:', e);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  play() {
+    if (!this.buffer) {
+      this.load();
+      return;
+    }
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const source = ctx.createBufferSource();
+    source.buffer = this.buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.4;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+  }
+}
+
+export const tickPlayer = new TickPlayer();
 
 
 // Generate a gentle, pleasant chime
