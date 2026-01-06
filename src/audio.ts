@@ -1,5 +1,7 @@
 // Audio notification using Web Audio API
 // Generates a gentle chime programmatically (no external file needed)
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { AmbientSoundId } from './types';
 
 let audioContext: AudioContext | null = null;
 
@@ -9,6 +11,91 @@ function getAudioContext(): AudioContext {
   }
   return audioContext;
 }
+
+const AMBIENT_URLS: Record<string, string> = {
+  rain: 'https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/rain.mp3',
+  forest: 'https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/birds.mp3',
+};
+
+class AmbientPlayer {
+  private audio: HTMLAudioElement | null = null;
+  private noiseNode: AudioBufferSourceNode | null = null;
+  private gainNode: GainNode | null = null;
+
+  async play(id: AmbientSoundId) {
+    this.stop();
+    if (id === 'none') return;
+
+    if (id === 'white_noise' || id === 'brown_noise') {
+      await this.playNoise(id);
+    } else if (AMBIENT_URLS[id]) {
+      this.playUrl(AMBIENT_URLS[id]);
+    }
+  }
+
+  private playUrl(url: string) {
+    this.audio = new Audio(url);
+    this.audio.loop = true;
+    this.audio.volume = 0.3;
+    this.audio.play().catch(e => console.error('Audio play failed:', e));
+  }
+
+  private async playNoise(type: 'white_noise' | 'brown_noise') {
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') await ctx.resume();
+
+    const bufferSize = ctx.sampleRate * 2;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastOut = 0.0;
+
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      if (type === 'brown_noise') {
+        data[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = data[i];
+        data[i] *= 3.5;
+      } else {
+        data[i] = white * 0.1; // White noise is harsh, keep low
+      }
+    }
+
+    this.noiseNode = ctx.createBufferSource();
+    this.noiseNode.buffer = buffer;
+    this.noiseNode.loop = true;
+
+    this.gainNode = ctx.createGain();
+    this.gainNode.gain.value = 0.1;
+
+    this.noiseNode.connect(this.gainNode);
+    this.gainNode.connect(ctx.destination);
+    this.noiseNode.start();
+  }
+
+  stop() {
+    if (this.audio) {
+      this.audio.pause();
+      this.audio = null;
+    }
+    if (this.noiseNode) {
+      this.noiseNode.stop();
+      this.noiseNode.disconnect();
+      this.noiseNode = null;
+    }
+    if (this.gainNode) {
+      this.gainNode.disconnect();
+      this.gainNode = null;
+    }
+  }
+
+  setVolume(vol: number) {
+    if (this.audio) this.audio.volume = vol * 0.5;
+    if (this.gainNode) this.gainNode.gain.value = vol * 0.2;
+  }
+}
+
+export const ambientPlayer = new AmbientPlayer();
+
 
 // Generate a gentle, pleasant chime
 export function playChime(): void {

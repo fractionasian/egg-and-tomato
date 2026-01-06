@@ -8,6 +8,8 @@ export interface TimerState {
   status: TimerStatus;
   remainingMs: number;
   totalMs: number;
+  ambientSoundId: string | null;
+  isAmbientEnabled: boolean;
 }
 
 export interface EggState extends TimerState {
@@ -42,6 +44,7 @@ export interface TomatoStats {
   totalCount: number;
   currentStreak: number;
   lastSessionDate: string;
+  history: Record<string, number>; // "YYYY-MM-DD": count
 }
 
 // Theme
@@ -53,6 +56,15 @@ export interface Theme {
   emoji: string;
   isPremium: boolean;
 }
+
+export type AmbientSoundId = 'none' | 'rain' | 'forest' | 'brown_noise' | 'white_noise';
+
+export interface AmbientSound {
+  id: AmbientSoundId;
+  name: string;
+  url: string; // or 'generated' for noise
+}
+
 
 // Storage keys
 export const STORAGE_KEYS = {
@@ -70,6 +82,10 @@ export const STORAGE_KEYS = {
   // Theme
   theme: 'timer_theme',
   darkMode: 'timer_dark_mode',
+
+  // Ambient
+  ambientSound: 'timer_ambient_sound_id',
+  ambientEnabled: 'timer_ambient_enabled',
 
   // Premium
   unlockCode: 'unlock_code',
