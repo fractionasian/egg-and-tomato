@@ -67,7 +67,13 @@ export function getTomatoStats(): TomatoStats {
     totalCount: 0,
     currentStreak: 0,
     lastSessionDate: '',
+    history: {},
   });
+
+  // Migration: Ensure history exists if old data
+  if (!stats.history) {
+    stats.history = {};
+  }
 
   // Reset today count if new day
   if (stats.todayDate !== getToday()) {
@@ -99,6 +105,9 @@ export function incrementTomatoStats(): TomatoStats {
     stats.currentStreak++;
   }
   stats.lastSessionDate = today;
+
+  // History
+  stats.history[today] = (stats.history[today] || 0) + 1;
 
   setItem(STORAGE_KEYS.tomatoStats, stats);
   return stats;
@@ -135,3 +144,21 @@ export function tryUnlockCode(code: string): boolean {
   }
   return false;
 }
+
+// Ambient
+export function getAmbientSoundId(): string {
+  return localStorage.getItem(STORAGE_KEYS.ambientSound) || 'none';
+}
+
+export function setAmbientSoundId(id: string): void {
+  localStorage.setItem(STORAGE_KEYS.ambientSound, id);
+}
+
+export function isAmbientEnabled(): boolean {
+  return localStorage.getItem(STORAGE_KEYS.ambientEnabled) === 'true';
+}
+
+export function setAmbientEnabled(enabled: boolean): void {
+  localStorage.setItem(STORAGE_KEYS.ambientEnabled, String(enabled));
+}
+
