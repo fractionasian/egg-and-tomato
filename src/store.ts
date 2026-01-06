@@ -14,6 +14,7 @@ export interface AppState {
     cyclePosition: number;
     ambientSoundId: string;
     isAmbientEnabled: boolean;
+    isEggTickingEnabled: boolean;
 }
 
 type StateListener = (state: AppState) => void;
@@ -32,6 +33,7 @@ export class Store {
             cyclePosition: 0,
             ambientSoundId: storage.getAmbientSoundId(),
             isAmbientEnabled: storage.isAmbientEnabled(),
+            isEggTickingEnabled: storage.isEggTickingEnabled(),
         };
 
         this.init();
@@ -149,6 +151,12 @@ export class Store {
     toggleAmbient() {
         this.state.isAmbientEnabled = !this.state.isAmbientEnabled;
         storage.setAmbientEnabled(this.state.isAmbientEnabled);
+        this.notify();
+    }
+
+    toggleEggTicking() {
+        this.state.isEggTickingEnabled = !this.state.isEggTickingEnabled;
+        storage.setEggTickingEnabled(this.state.isEggTickingEnabled);
         this.notify();
     }
 }

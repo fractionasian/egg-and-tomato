@@ -162,3 +162,11 @@ export function setAmbientEnabled(enabled: boolean): void {
   localStorage.setItem(STORAGE_KEYS.ambientEnabled, String(enabled));
 }
 
+export function isEggTickingEnabled(): boolean {
+  return localStorage.getItem(STORAGE_KEYS.eggTickingEnabled) !== 'false'; // Default to true
+}
+
+export function setEggTickingEnabled(enabled: boolean): void {
+  localStorage.setItem(STORAGE_KEYS.eggTickingEnabled, String(enabled));
+}
+

@@ -14,6 +14,7 @@ export interface ViewActions {
   onSaveDarkMode: (mode: 'auto' | 'light' | 'dark') => void;
   onSetAmbient: (id: string) => void;
   onToggleAmbient: () => void;
+  onToggleEggTicking: () => void;
   onTestSound: () => void;
 }
 
@@ -191,10 +192,17 @@ export class View {
                 <option value="brown_noise" ${state.ambientSoundId === 'brown_noise' ? 'selected' : ''}>🟤 Brown Noise</option>
                 <option value="white_noise" ${state.ambientSoundId === 'white_noise' ? 'selected' : ''}>⚪ White Noise</option>
                 </select>
-                <button class="btn btn-secondary btn-icon" id="toggle-ambient" title="Enable/Disable">
+                <button class="btn btn-secondary btn-icon" id="toggle-ambient" title="Enable/Disable Ambient">
                     ${state.isAmbientEnabled ? '🔊' : '🔇'}
                 </button>
             </div>
+          </div>
+
+          <div class="setting-row">
+            <span class="setting-label">Kitchen Timer Sound (Egg)</span>
+            <button class="btn btn-secondary btn-icon" id="toggle-egg-ticking" title="Enable/Disable Ticking">
+                ${state.isEggTickingEnabled ? '🔔' : '🔕'}
+            </button>
           </div>
 
           <div class="setting-row">
@@ -323,6 +331,10 @@ export class View {
 
     document.getElementById('toggle-ambient')?.addEventListener('click', () => {
       this.actions.onToggleAmbient();
+    });
+
+    document.getElementById('toggle-egg-ticking')?.addEventListener('click', () => {
+      this.actions.onToggleEggTicking();
     });
 
     document.getElementById('test-sound')?.addEventListener('click', this.actions.onTestSound);

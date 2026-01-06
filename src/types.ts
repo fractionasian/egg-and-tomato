@@ -10,6 +10,7 @@ export interface TimerState {
   totalMs: number;
   ambientSoundId: string | null;
   isAmbientEnabled: boolean;
+  isEggTickingEnabled: boolean;
 }
 
 export interface EggState extends TimerState {
@@ -86,6 +87,7 @@ export const STORAGE_KEYS = {
   // Ambient
   ambientSound: 'timer_ambient_sound_id',
   ambientEnabled: 'timer_ambient_enabled',
+  eggTickingEnabled: 'timer_egg_ticking_enabled',
 
   // Premium
   unlockCode: 'unlock_code',

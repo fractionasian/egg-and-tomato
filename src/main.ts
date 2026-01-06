@@ -9,6 +9,7 @@ import {
   showNotification,
   requestNotificationPermission,
   ambientPlayer,
+  tickPlayer,
 } from './audio';
 import * as storage from './storage';
 import { confettiBurst } from './confetti';
@@ -19,6 +20,7 @@ import { confettiBurst } from './confetti';
 
 const store = new Store();
 let timerInstance: ReturnType<typeof createTimer> | null = null;
+let lastSecond: number | null = null;
 
 // Actions implementation
 const actions: ViewActions = {
@@ -84,6 +86,9 @@ const actions: ViewActions = {
   onToggleAmbient: () => {
     store.toggleAmbient();
   },
+  onToggleEggTicking: () => {
+    store.toggleEggTicking();
+  },
 };
 
 // Initialize View
@@ -95,13 +100,24 @@ function createTimerInstance() {
   timerInstance = createTimer(
     state.remainingMs,
     (remaining) => {
-      view.updateTimerDisplay({ ...store.getState(), remainingMs: remaining });
+      const state = store.getState();
+      view.updateTimerDisplay({ ...state, remainingMs: remaining });
+
+      // Sync Ticking Sound for Egg Mode
+      if (state.mode === 'egg' && state.isEggTickingEnabled) {
+        const currentSecond = Math.ceil(remaining / 1000);
+        if (lastSecond !== null && currentSecond !== lastSecond && currentSecond >= 0) {
+          tickPlayer.play();
+        }
+        lastSecond = currentSecond;
+      }
     },
     handleTimerComplete
   );
 }
 
 function handleTimerComplete() {
+  playChime(); // Play the chime immediately
   showNotification('Timer Complete', 'Your timer has finished!');
   const state = store.getState();
   store.setStatus('idle');
@@ -151,7 +167,8 @@ function handleTimerComplete() {
 
 // Helper to sync audio
 function syncAmbient(state: any) {
-  if (state.isAmbientEnabled && state.status === 'running' && state.ambientSoundId !== 'none') {
+  // Only play ambient sound in tomato mode. Egg mode uses ticking.
+  if (state.mode === 'tomato' && state.isAmbientEnabled && state.status === 'running' && state.ambientSoundId !== 'none') {
     ambientPlayer.play(state.ambientSoundId as any);
   } else {
     ambientPlayer.stop();
@@ -177,16 +194,12 @@ view.render(store.getState());
 // Assign createTimerInstanceSafe to the Actions usage
 actions.onStart = () => {
   requestNotificationPermission();
-  if (!timerInstance) createTimerInstance();
+  if (!timerInstance) {
+    lastSecond = null; // Reset sync tracker
+    createTimerInstance();
+  }
   timerInstance?.start();
-  // store.setStatus trigger render?
   store.setStatus('running');
-  // This render might wipe the DOM, but timer is running in background JS?
-  // If render wipes DOM, the timerInstance is still valid, 
-  // but the DOM nodes it was updating (via view.updateTimerDisplay?) might be gone?
-  // view.render RE-CREATES DOM nodes.
-  // So subsequent ticks need to find NEW nodes.
-  // view.updateTimerDisplay does querySelector. So it finds new nodes. Safe.
 };
 
 actions.onPause = () => {
